@@ -6,6 +6,8 @@ import com.exemplo.secrest.entity.User;
 import com.exemplo.secrest.enums.RoleName;
 import com.exemplo.secrest.producer.UserProducer;
 import com.exemplo.secrest.repository.UserRepository;
+import com.exemplo.secrest.security.service.JwtTokenService;
+import com.exemplo.secrest.security.service.UserDetailsImpl;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,17 +23,20 @@ public class AuthCodeService {
     private final UserProducer userProducer;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenService jwtTokenService;
 
     public AuthCodeService(
             CodigoCacheService codigoCacheService,
             UserProducer userProducer,
             UserRepository userRepository,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            JwtTokenService jwtTokenService
     ) {
         this.codigoCacheService = codigoCacheService;
         this.userProducer = userProducer;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtTokenService = jwtTokenService;
     }
 
     @Transactional
@@ -52,6 +57,18 @@ public class AuthCodeService {
 
     public boolean verifyCode(String email, String code) {
         return codigoCacheService.verificarCodigo(email, code);
+    }
+
+    public String verifyCodeAndGenerateToken(String email, String code) {
+        String normalizedEmail = normalizeEmail(email);
+        if (!codigoCacheService.verificarCodigo(normalizedEmail, code)) {
+            return null;
+        }
+
+        return userRepository.findByEmail(normalizedEmail)
+                .map(UserDetailsImpl::new)
+                .map(jwtTokenService::generateToken)
+                .orElse(null);
     }
 
     private User createTemporaryUser(String email) {

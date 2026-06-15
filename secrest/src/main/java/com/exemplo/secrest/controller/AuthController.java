@@ -36,7 +36,7 @@ public class AuthController {
             return ResponseEntity.badRequest().build();
         }
 
-        boolean valid = authCodeService.verifyCode(dto.email(), dto.code());
-        return ResponseEntity.ok(new VerifyCodeResponseDto(valid));
+        String token = authCodeService.verifyCodeAndGenerateToken(dto.email(), dto.code());
+        return ResponseEntity.ok(new VerifyCodeResponseDto(token != null, token));
     }
 }

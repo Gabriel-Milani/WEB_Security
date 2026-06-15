@@ -9,6 +9,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ms.email.dtos.EmailRecordDto;
 import com.ms.email.enums.StatusEmail;
 import com.ms.email.models.EmailModel;
 import com.ms.email.repositories.EmailRepository;
@@ -28,7 +29,13 @@ public class EmailService {
     private String emailFrom;
 
     @Transactional
-    public EmailModel sendEmail(EmailModel emailModel) {
+    public EmailModel sendEmail(EmailRecordDto emailRecordDto) {
+        EmailModel emailModel = new EmailModel();
+        emailModel.setUserId(emailRecordDto.userId());
+        emailModel.setEmailTo(emailRecordDto.emailTo());
+        emailModel.setSubject(emailRecordDto.subject());
+        emailModel.setText(emailRecordDto.text());
+
         try {
             emailModel.setSendDateEmail(LocalDateTime.now());
             emailModel.setEmailFrom(emailFrom);
@@ -43,6 +50,7 @@ public class EmailService {
         } catch (MailException e) {
             emailModel.setStatusEmail(StatusEmail.ERROR);
         } finally {
-            return emailRepository.save(emailModel); }
+            return emailRepository.save(emailModel);
+        }
     }
 }
