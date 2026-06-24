@@ -10,14 +10,36 @@
   <main class="shell">
     <section class="panel">
       <h1>Dashboard</h1>
-      <p id="status"></p>
+      <div class="actions">
+        <button id="protected" type="button">Testar endpoint protegido</button>
+        <button id="profile" type="button">Meu perfil</button>
+        <button id="logout" type="button" class="secondary">Sair</button>
+      </div>
+      <pre id="output"></pre>
     </section>
   </main>
   <script>
     const token = sessionStorage.getItem('jwtToken');
-    document.getElementById('status').textContent = token
-      ? 'Token JWT armazenado na sessao.'
-      : 'Token JWT nao encontrado.';
+    const output = document.getElementById('output');
+
+    if (!token) {
+      window.location.href = '/';
+    }
+
+    async function callApi(path) {
+      const response = await fetch(path, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      output.textContent = JSON.stringify(data, null, 2);
+    }
+
+    document.getElementById('protected').addEventListener('click', () => callApi('/api/protected'));
+    document.getElementById('profile').addEventListener('click', () => callApi('/api/me'));
+    document.getElementById('logout').addEventListener('click', () => {
+      sessionStorage.removeItem('jwtToken');
+      window.location.href = '/';
+    });
   </script>
 </body>
 </html>

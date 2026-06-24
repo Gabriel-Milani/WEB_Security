@@ -3,6 +3,7 @@ package com.exemplo.secrest.service;
 import com.exemplo.secrest.dto.CreateUserDto;
 import com.exemplo.secrest.dto.LoginUserDto;
 import com.exemplo.secrest.dto.RecoveryJwtTokenDto;
+import com.exemplo.secrest.dto.UpdateProfileDto;
 import com.exemplo.secrest.entity.Role;
 import com.exemplo.secrest.entity.User;
 import com.exemplo.secrest.repository.UserRepository;
@@ -14,6 +15,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
@@ -43,5 +45,18 @@ public class UserService {
                 .roles(List.of(Role.builder().name(createDto.role()).build()))
                 .build();
         userRepository.save(newUser);
+    }
+
+    @Transactional
+    public User updateProfile(String email, UpdateProfileDto dto) {
+        User user = findByEmail(email);
+        user.setName(dto.name());
+        user.setRoles(List.of(Role.builder().name(dto.role()).build()));
+        return userRepository.save(user);
+    }
+
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado: " + email));
     }
 }

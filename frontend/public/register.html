@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Completar cadastro</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <section class="panel">
+      <h1>Completar cadastro</h1>
+      <form id="register-form">
+        <label for="name">Nome</label>
+        <input id="name" name="name" autocomplete="name" required>
+        <label for="role">Cargo</label>
+        <select id="role" name="role" required>
+          <option value="ROLE_CUSTOMER">Customer</option>
+          <option value="ROLE_ADMINISTRATOR">Administrator</option>
+        </select>
+        <p id="error" class="error" hidden></p>
+        <button type="submit">Salvar perfil</button>
+      </form>
+    </section>
+  </main>
+  <script>
+    const token = sessionStorage.getItem('jwtToken');
+    if (!token) {
+      window.location.href = '/';
+    }
+
+    document.getElementById('register-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const error = document.getElementById('error');
+      error.hidden = true;
+
+      const body = {
+        name: document.getElementById('name').value,
+        role: document.getElementById('role').value
+      };
+
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (!response.ok) {
+        error.textContent = 'Nao foi possivel salvar o perfil.';
+        error.hidden = false;
+        return;
+      }
+
+      window.location.href = '/dashboard';
+    });
+  </script>
+</body>
+</html>

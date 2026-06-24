@@ -54,7 +54,7 @@ app.post('/verify-code', async (req, res) => {
 <body>
 <script>
 sessionStorage.setItem('jwtToken', ${JSON.stringify(token)});
-window.location.href = '/dashboard';
+window.location.href = '/register';
 </script>
 </body>
 </html>`);
@@ -66,6 +66,70 @@ window.location.href = '/dashboard';
 app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
+
+app.get('/register', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'register.html'));
+});
+
+app.post('/api/register', async (req, res) => {
+  const token = getBearerToken(req);
+
+  if (!token) {
+    return res.status(401).json({ message: 'Token ausente' });
+  }
+
+  try {
+    const response = await axios.post(`${USER_SERVICE_URL}/users/update-profile`, req.body, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return res.json(response.data);
+  } catch (error) {
+    return res.status(statusFrom(error)).json({ message: 'Nao foi possivel atualizar o perfil' });
+  }
+});
+
+app.get('/api/protected', async (req, res) => {
+  const token = getBearerToken(req);
+
+  if (!token) {
+    return res.status(401).json({ message: 'Token ausente' });
+  }
+
+  try {
+    const response = await axios.get(`${USER_SERVICE_URL}/users/test/customer`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return res.json({ message: response.data });
+  } catch (error) {
+    return res.status(statusFrom(error)).json({ message: 'Acesso negado ou token invalido' });
+  }
+});
+
+app.get('/api/me', async (req, res) => {
+  const token = getBearerToken(req);
+
+  if (!token) {
+    return res.status(401).json({ message: 'Token ausente' });
+  }
+
+  try {
+    const response = await axios.get(`${USER_SERVICE_URL}/users/me`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return res.json(response.data);
+  } catch (error) {
+    return res.status(statusFrom(error)).json({ message: 'Nao foi possivel carregar o perfil' });
+  }
+});
+
+function getBearerToken(req) {
+  const authorization = req.headers.authorization || '';
+  return authorization.startsWith('Bearer ') ? authorization.substring(7) : null;
+}
+
+function statusFrom(error) {
+  return error.response ? error.response.status : 500;
+}
 
 app.listen(PORT, () => {
   console.log(`Frontend rodando em http://localhost:${PORT}`);
